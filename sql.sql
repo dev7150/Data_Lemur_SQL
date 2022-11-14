@@ -28,14 +28,14 @@ on t.user_id = u.user_id
 where status = 'Completed'
 group by 1
 order by 2 DESC
-limit 3
+limit 3;
 
 -- Duplicate Job Listings
 Select COUNT(*) as co_w_duplicate_jobs
 from (SELECT COUNT(*) 
 FROM job_listings jl
 GROUP BY company_id,title,description
-having count(*)>1) z
+having count(*)>1) z;
 
 -- Histogram of Tweets
 with base as(
@@ -51,4 +51,93 @@ Select tweets_num as tweet_bucket,
 count(user_id) as users_num
 from base
 group by 1
+
+-- LinkedIn Power Creators (Part 1)
+SELECT profile_id FROM personal_profiles pp
+join company_pages cp on
+pp.employer_id = cp.company_id
+and cp.followers < pp.followers
+order by 1;
+
+
+-- Spare Server Capacity
+WITH total_demand AS (
+  SELECT 
+    datacenter_id,
+    sum(monthly_demand) as total_demand
+  FROM
+    forecasted_demand
+  GROUP BY
+    datacenter_id
+)
+
+SELECT
+  td.datacenter_id,
+  d.monthly_capacity - td.total_demand AS spare_capacity
+FROM 
+  total_demand AS td
+JOIN 
+  datacenters AS d
+ON d.datacenter_id=td.datacenter_id  
+ ORDER BY 
+   datacenter_id;
+
+-- Average Post Hiatus (Part 1)
+SELECT user_id,
+DATE_PART('DAY',MAX(post_date)- MIN(post_date)) as days_between
+FROM posts
+ where DATE_PART('YEAR', post_date) = '2021'
+group by 1
+having count(post_id)>1
+
+-- Teams Power Users
+SELECT sender_id, count(message_id) as message_count FROM messages
+where DATE_PART('month',sent_date) = 08
+and DATE_PART('YEAR',sent_date) = 2022
+group by 1
+order by 2 desc
+limit 2
+
+-- Top Rated Businesses
+SELECT 
+  COUNT(business_id) AS business_count,
+  ROUND(100.0 * COUNT(business_id)/
+    (SELECT COUNT (business_id) FROM reviews),0) AS top_rated_pct
+FROM reviews
+WHERE review_stars IN (4, 5);
+
+-- Ad Campaign ROAS
+SELECT advertiser_id, 
+round((sum(revenue)/sum(spend))::numeric,2) as ROAS FROM ad_campaigns
+group by advertiser_id
+order by 1
+
+-- ApplePay Volume
+SELECT merchant_id,
+sum(case when lower(payment_method) = 'apple pay' 
+    then transaction_amount else 0 end) AS total_transaction
+FROM transactions
+group by 1
+order by 2 desc
+
+-- App Click-through Rate (CTR)
+SELECT app_id,
+ROUND(100.0*(sum(CASE when event_type = 'click' then 1.0 else 0 end)/
+sum(CASE when event_type = 'impression' then 1.0 else 0 end)),2) as ctr
+FROM events
+where EXTRACT(year from timestamp) = 2022
+group by app_id
+
+-- Second Day Confirmation
+SELECT user_id
+FROM emails e 
+join texts t
+on t.email_id = e.email_id
+and e.signup_date + INTERVAL '1 day' = t.action_date ;
+
+-- Compressed Mean
+SELECT 
+round(sum(item_count*order_occurrences)*1.0/
+SUM(order_occurrences),1) as mean
+FROM items_per_order;
 
