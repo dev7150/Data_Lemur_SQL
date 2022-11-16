@@ -141,3 +141,13 @@ round(sum(item_count*order_occurrences)*1.0/
 SUM(order_occurrences),1) as mean
 FROM items_per_order;
 
+-- User's Third Transaction
+with base as 
+(SELECT *, RANK() OVER(PARTITION BY user_id order by transaction_date) as rank
+FROM transactions
+)
+
+Select user_id, spend, transaction_date
+from base
+where rank = 3
+
