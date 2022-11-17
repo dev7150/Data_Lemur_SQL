@@ -151,3 +151,21 @@ Select user_id, spend, transaction_date
 from base
 where rank = 3
 
+
+-- Sending vs. Opening Snaps
+with base AS
+(SELECT  user_id,
+sum(case when activity_type = 'open' then time_spent else 0 end) as time_opening,
+SUM(case when activity_type = 'send' then time_spent else 0 end) as time_sending
+FROM activities
+group by user_id
+)
+
+SELECT ab.age_bucket, 
+round((time_sending / (time_sending + time_opening))*100.0,2) as send_perc,
+round((time_opening / (time_sending + time_opening))*100.0,2) as open_perc
+from age_breakdown ab
+join base 
+on base.user_id = ab.user_id
+order by 1
+
