@@ -169,3 +169,11 @@ join base
 on base.user_id = ab.user_id
 order by 1
 
+-- Average Review Ratings
+SELECT EXTRACT(MONTH FROM submit_date) as month,
+product_id,
+round(AVG(stars),2)
+FROM reviews
+GROUP BY 1,2
+order by 1,2
+
