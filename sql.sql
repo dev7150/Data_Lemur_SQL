@@ -177,3 +177,19 @@ FROM reviews
 GROUP BY 1,2
 order by 1,2
 
+-- Cards Issued Difference
+SELECT card_name
+,MAX(issued_amount) - MIN(issued_amount) as difference
+FROM monthly_cards_issued
+group by 1
+order by 2 desc
+
+
+-- Pharmacy Analytics (Part 1)
+SELECT drug
+,SUM(total_sales - cogs) as total_profit
+FROM pharmacy_sales
+group by 1
+order by 2 DESC
+limit 3
+
