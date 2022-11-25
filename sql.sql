@@ -193,3 +193,20 @@ group by 1
 order by 2 DESC
 limit 3
 
+-- Pharmacy Analytics (Part 2)
+SELECT manufacturer,
+COUNT(drug)
+,abs(SUM(total_sales - cogs)) as total_profit
+FROM pharmacy_sales
+where (total_sales - cogs) < 0
+group by 1
+order by 3 DESC
+
+-- Pharmacy Analytics (Part 3)
+Select manufacturer
+,'$'|| round(sum(total_sales)/10^6::numeric,0) || ' ' || 'million'
+FROM pharmacy_sales
+group by 1
+order by sum(total_sales) desc
+
+
