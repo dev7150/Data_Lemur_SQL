@@ -209,4 +209,13 @@ FROM pharmacy_sales
 group by 1
 order by sum(total_sales) desc
 
+-- Patient Support Analysis (Part 1)
+with base AS
+(SELECT COUNT(case_id) as c
+FROM callers
+GROUP BY policy_holder_id
+HAVING COUNT(case_id) > 2
+)
+SELECT count(c) as member_count from base
+
 
