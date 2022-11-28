@@ -251,3 +251,19 @@ SELECT category
 , s as total_spend
 from base
 where r < 3
+
+-- Top 5 Artists
+with base as 
+(SELECT a.artist_name
+, dense_rank() over (order by COUNT(g.song_id) desc) as artist_rank 
+FROM artists a
+join songs s
+on a.artist_id = s.artist_id
+join global_song_rank g
+on s.song_id = g.song_id
+where g.rank < 11
+group by 1
+)
+
+Select * from base 
+where artist_rank < 6
