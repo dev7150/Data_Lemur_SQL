@@ -218,4 +218,36 @@ HAVING COUNT(case_id) > 2
 )
 SELECT count(c) as member_count from base
 
+-- Tweets' Rolling Averages
+with base as 
+(
+  SELECT user_id,
+  tweet_date,
+  COUNT(tweet_id) as c
+  from tweets
+  group by 1 ,2
+)
 
+SELECT user_id
+, tweet_date
+, round(AVG(c) over (PARTITION BY user_id order by tweet_date
+              rows BETWEEN 2 preceding and current row),2)
+FROM base
+
+
+-- Highest-Grossing Items
+with base as 
+(SELECT category
+, product
+, sum(spend) as s
+, RANK() over (PARTITION BY category order by SUM(spend) desc) as r
+FROM product_spend
+
+where EXTRACT(year from transaction_date) = 2022
+GROUP BY 1,2
+)
+SELECT category
+, product
+, s as total_spend
+from base
+where r < 3
