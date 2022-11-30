@@ -242,7 +242,6 @@ with base as
 , sum(spend) as s
 , RANK() over (PARTITION BY category order by SUM(spend) desc) as r
 FROM product_spend
-
 where EXTRACT(year from transaction_date) = 2022
 GROUP BY 1,2
 )
@@ -267,3 +266,33 @@ group by 1
 
 Select * from base 
 where artist_rank < 6
+
+-- Signup Activation Rate
+with rate AS
+(
+SELECT emails.user_id, texts.signup_action
+,   CASE WHEN texts.email_id IS NOT NULL THEN 1
+    ELSE 0 END AS activation_count
+FROM emails
+LEFT JOIN texts
+  ON emails.email_id = texts.email_id
+  AND texts.signup_action = 'Confirmed'
+)
+SELECT 
+  ROUND(
+    SUM(activation_count)::DECIMAL 
+      / COUNT(user_id), 2) AS activation_rate
+FROM rate;
+
+-- Fill Missing Client Data
+with base AS
+(SELECT product_id
+,  category
+, name
+, count(category) over (order by product_id) as cnt
+FROM products
+)
+SELECT product_id
+, FIRST_VALUE(category) over (PARTITION BY cnt order by product_id) as category
+, name
+from base
