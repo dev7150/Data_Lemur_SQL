@@ -344,3 +344,10 @@ SELECT manufacturer
 , drug as top_drugs
 from base where r < 3
 order by 1
+
+-- Frequently Purchased Pairs
+SELECT count(*) as combo_num
+FROM transactions t1
+join transactions t2
+on t1.transaction_id = t2.transaction_id
+and t1.product_id < t2.product_id;
