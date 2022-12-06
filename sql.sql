@@ -312,3 +312,35 @@ SELECT user_id, song_id, SUM(song_plays) AS song_count
 FROM history
 GROUP BY user_id, song_id
 ORDER BY song_count DESC;
+
+
+-- Mean, Median, Mode
+with base AS
+(
+Select email_count as mode, count(email_count) 
+from inbox_stats
+group by 1 
+ORDER BY 2 DESC
+limit 1
+)
+SELECT round(SUM(i.email_count)/count(i.user_id),0) as mean
+, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY i.email_count) as median
+, mode
+FROM inbox_stats i, base b
+group by 3;
+
+SELECT 
+  ROUND(AVG(email_count)) as mean,
+  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY email_count) AS median,
+  MODE() WITHIN GROUP (ORDER BY email_count) AS mode
+ FROM inbox_stats;
+
+-- Pharmacy Analytics (Part 4)
+ with base as 
+(SELECT manufacturer,drug,
+row_number() OVER(partition by manufacturer order by units_sold desc) as r FROM pharmacy_sales)
+
+SELECT manufacturer
+, drug as top_drugs
+from base where r < 3
+order by 1
