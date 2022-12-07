@@ -364,3 +364,21 @@ group by customer_id
 Select customer_id
 from base where 
 cn = (Select count(DISTINCT product_category) from products)
+
+-- Odd and Even Measurements
+with base as 
+(
+SELECT RANK() over (PARTITION BY measurement_time::date order by measurement_time) as r
+,measurement_id,
+measurement_value,
+measurement_time
+from measurements
+)
+
+Select measurement_time::date
+,sum(case when r%2 <> 0 then measurement_value else 0 end) as odd_sum
+, sum(case when r%2 = 0 then measurement_value else 0 end) as even_sum
+from Base
+group by 1
+order by 1
+
