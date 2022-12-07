@@ -351,3 +351,16 @@ FROM transactions t1
 join transactions t2
 on t1.transaction_id = t2.transaction_id
 and t1.product_id < t2.product_id;
+
+--Supercloud Customer
+with base AS
+(SELECT customer_id,COUNT(DISTINCT product_category) as cn
+FROM customer_contracts cc
+right join products p
+on cc.product_id = p.product_id
+group by customer_id
+)
+
+Select customer_id
+from base where 
+cn = (Select count(DISTINCT product_category) from products)
