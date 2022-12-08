@@ -418,3 +418,27 @@ WHERE order_occurrences =
   (SELECT MODE() WITHIN GROUP (ORDER BY order_occurrences DESC) 
   FROM items_per_order);
 
+  -- Card Launch Success
+  WITH card_launch AS (
+SELECT 
+  card_name,
+  issued_amount,
+  MAKE_DATE(issue_year, issue_month, 1) AS issue_date,
+  MIN(MAKE_DATE(issue_year, issue_month, 1)) OVER (
+    PARTITION BY card_name) AS launch_date
+FROM monthly_cards_issued
+)
+
+SELECT card_name, issued_amount
+FROM card_launch
+WHERE issue_date = launch_date
+ORDER BY issued_amount DESC;
+
+-- Patient Support Analysis (Part 2)
+SELECT
+round(
+SUM(case when call_category='n/a' or call_category is NULL then 1 else 0 end)*1.0/
+count(case_id)
+*100,1) as call_percentage
+FROM callers;
+
