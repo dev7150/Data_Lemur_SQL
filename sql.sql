@@ -382,3 +382,39 @@ from Base
 group by 1
 order by 1
 
+-- Histogram of Users and Purchases
+WITH base AS (
+  SELECT 
+    transaction_date, 
+    user_id, 
+    product_id, 
+    RANK() OVER (PARTITION BY user_id 
+      ORDER BY transaction_date DESC) AS days_rank 
+  FROM user_transactions)  
+SELECT 
+  transaction_date, 
+  user_id,
+  COUNT(product_id) AS purchase_count
+FROM base
+WHERE days_rank = 1 
+GROUP BY transaction_date, user_id
+ORDER BY transaction_date;
+
+-- Compressed Mode
+with base AS
+(
+SELECT item_count, 
+RANK() over (order by order_occurrences desc) as r
+from items_per_order
+)
+Select item_count as mode
+from base 
+where r = 1
+
+
+SELECT item_count
+FROM items_per_order
+WHERE order_occurrences = 
+  (SELECT MODE() WITHIN GROUP (ORDER BY order_occurrences DESC) 
+  FROM items_per_order);
+
