@@ -463,3 +463,40 @@ SELECT
   / (SELECT COUNT(*) FROM phone_calls),1) AS international_call_pct
 FROM international_calls;
 
+
+---Active User Retention
+with base AS
+(SELECT user_id
+FROM user_actions ua
+where event_date between '2022-07-01' and '2022-07-31'
+and event_type in ('sign-in', 'like', 'comment')
+
+INTERSECT
+
+SELECT user_id
+FROM user_actions ua
+where event_date between '2022-06-01' and '2022-06-30'
+and event_type in ('sign-in', 'like', 'comment')
+)
+
+Select '7' as month,
+count(user_id) as monthly_active_users
+from base
+
+---Solution 2
+SELECT 
+  EXTRACT(MONTH FROM curr_month.event_date) AS mth, 
+  COUNT(DISTINCT curr_month.user_id) AS monthly_active_users 
+FROM user_actions AS curr_month
+WHERE EXISTS (
+  SELECT last_month.user_id 
+  FROM user_actions AS last_month
+  WHERE last_month.user_id = curr_month.user_id
+    AND EXTRACT(MONTH FROM last_month.event_date) =
+    EXTRACT(MONTH FROM curr_month.event_date - interval '1 month')
+)
+  AND EXTRACT(MONTH FROM curr_month.event_date) = 7
+  AND EXTRACT(YEAR FROM curr_month.event_date) = 2022
+GROUP BY EXTRACT(MONTH FROM curr_month.event_date);
+
+
