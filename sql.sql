@@ -499,4 +499,23 @@ WHERE EXISTS (
   AND EXTRACT(YEAR FROM curr_month.event_date) = 2022
 GROUP BY EXTRACT(MONTH FROM curr_month.event_date);
 
+-- Y-on-Y Growth Rate
+with base AS
+(SELECT 
+EXTRACT(year from transaction_date) as y
+, product_id,
+sum(spend) as total
+FROM user_transactions
+GROUP BY 1,2
+)
+
+SELECT y as year
+, product_id
+, total as curr_year_spend
+, lag(total,1) over (partition by product_id order by product_id,y) as prev_year_spend
+, ROUND(100*(total- lag(total,1) over (partition by product_id order by product_id,y))
+  /lag(total,1) over (partition by product_id order by product_id,y),2) as yoy_rate
+from base
+order by 2,1
+
 
