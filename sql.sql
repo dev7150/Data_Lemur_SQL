@@ -556,4 +556,31 @@ SELECT
   non_prime_item_count AS item_count  
 FROM non_prime_items;
 
+-- Median Google Search Frequency
+with base AS(
+SELECT 
+searches
+, num_users
+, GENERATE_SERIES(1,num_users)
+FROM search_frequency
+)
+
+SELECT
+PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY searches) AS median
+from base
+
+-- Advertiser Status
+SELECT COALESCE(a.user_id,b.user_id) as user_id,
+(CASE when b.user_id is null then 'CHURN'
+    when a.status = 'CHURN' and b.user_id is not null then 'RESURRECT'
+    when a.status = 'NEW' and b.user_id is not null then 'EXISTING'
+    WHEN a.status = 'RESURRECT' and b.user_id is not null then 'EXISTING'
+    when a.user_id is null and b.user_id is not null then 'NEW'
+    else a.status end)
+    AS new_status
+FROM advertiser a
+full outer join daily_pay b
+on a.user_id = b.user_id
+order by 1;
+
 
