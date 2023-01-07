@@ -658,6 +658,23 @@ FROM arrange
 GROUP BY topping_name, total_cost
 ORDER BY total_cost DESC, pizza;
 
+-- Patient Support Analysis (Part 3) [UnitedHealth SQL Interview Question]
+with base AS
+(
+SELECT policy_holder_id,
+RANK() over (PARTITION BY policy_holder_id order by call_received desc) as r
+, call_received
+FROM callers)
+
+SELECT count(DISTINCT(b1.policy_holder_id))
+--,b2.policy_holder_id, b1.call_received,b2.call_received,EXTRACT(DAY FROM b1.call_received - b2.call_received)
+from base b1
+join base b2
+on b1.policy_holder_id = b2.policy_holder_id
+and b1.r < b2.r
+and abs(EXTRACT(DAY FROM b1.call_received - b2.call_received)) < 7
+order by 1
+
 
 
 
