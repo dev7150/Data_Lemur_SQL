@@ -593,7 +593,7 @@ join pizza_toppings p3
 on p2.topping_name < p3.topping_name
 order by total_cost desc,pizza
 
--- using recursion
+-- using recursion (https://www.postgresqltutorial.com/postgresql-tutorial/postgresql-recursive-query/)
 WITH RECURSIVE all_toppings AS (
   SELECT
   topping_name::VARCHAR,
@@ -657,6 +657,52 @@ SELECT
 FROM arrange
 GROUP BY topping_name, total_cost
 ORDER BY total_cost DESC, pizza;
+
+-- Patient Support Analysis (Part 4) [UnitedHealth SQL Interview Question]
+with base AS
+(SELECT EXTRACT(year from call_received) as year
+, extract(month from call_received) as month
+, count(call_duration_secs) as long
+
+FROM callers
+where call_duration_secs > 300
+group by 1,2
+order by 1,2
+)
+Select year
+, month
+--,long
+--,lag(long) OVER(order by year,month)
+,ROUND(((long - lag(long) OVER(order by year,month))*1.0/lag(long) 
+OVER(order by year,month))*100,1) as growth_pct
+from base
+
+-- Repeated Payments [Stripe SQL Interview Question]
+ with base AS
+ (SELECT 
+    merchant_id, 
+    credit_card_id, 
+    amount, 
+    EXTRACT(
+      Minute 
+      FROM 
+        transaction_timestamp - LAG(transaction_timestamp) OVER(
+          PARTITION BY merchant_id, 
+          credit_card_id, 
+          amount 
+          ORDER BY 
+            transaction_timestamp
+        )
+    ) AS minute_difference    --dividing by 60 to get the returned value in form of minutes
+  FROM 
+    transactions
+    )
+   SELECT 
+  COUNT(merchant_id) AS payment_count
+FROM 
+  base 
+WHERE minute_difference < 10
+
 
 
 
